@@ -1,4 +1,6 @@
 import { hash, compare } from 'bcrypt';
+import crypto from 'node:crypto';
+import { Buffer } from 'node:buffer';
 import { generateToken } from './auth';
 
 export const db = {

@@ -3,16 +3,16 @@
   "private": true,
   "version": "0.0.1",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "wrangler dev src/worker.js",
+    "build": "wrangler deploy --dry-run",
+    "deploy": "wrangler deploy"
   },
   "dependencies": {
     "vue": "^3.3.4",
     "vue-router": "^4.2.4",
     "pinia": "^2.1.6",
     "axios": "^1.6.2",
-    "bcryptjs": "^2.4.3",
+    "bcrypt": "^5.1.1",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.3.0",
     "@heroicons/vue": "^2.0.18",
@@ -26,6 +26,7 @@
     "vite": "^4.4.9",
     "@tailwindcss/forms": "^0.5.7",
     "@tailwindcss/typography": "^0.5.10",
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "wrangler": "^3.0.0"
   }
 }
