@@ -2,47 +2,54 @@
 DROP TABLE IF EXISTS sessions;
 DROP TABLE IF EXISTS chats;
 DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS cars;
+DROP TABLE IF EXISTS bookings;
 
 -- Users table
 CREATE TABLE users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    name TEXT,
-    role TEXT DEFAULT 'user' CHECK(role IN ('admin', 'user')),
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    last_login DATETIME
+    password TEXT NOT NULL,
+    name TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'user',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Chat history table
-CREATE TABLE chats (
+-- Cars table
+CREATE TABLE cars (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    message TEXT NOT NULL,
-    response TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(user_id) REFERENCES users(id)
+    make TEXT NOT NULL,
+    model TEXT NOT NULL,
+    year INTEGER NOT NULL,
+    price DECIMAL(10,2) NOT NULL,
+    description TEXT,
+    image_url TEXT,
+    status TEXT DEFAULT 'available',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- User sessions table
-CREATE TABLE sessions (
+-- Bookings table
+CREATE TABLE bookings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    car_id INTEGER NOT NULL,
     user_id INTEGER NOT NULL,
-    token TEXT UNIQUE NOT NULL,
-    expires_at DATETIME NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(user_id) REFERENCES users(id)
+    FOREIGN KEY (car_id) REFERENCES cars(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
--- Create indexes
-CREATE INDEX idx_user_email ON users(email);
-CREATE INDEX idx_user_role ON users(role);
-CREATE INDEX idx_chat_user_id ON chats(user_id);
-CREATE INDEX idx_session_token ON sessions(token);
-CREATE INDEX idx_session_user ON sessions(user_id);
+-- Indexes
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_cars_make_model ON cars(make, model);
+CREATE INDEX idx_bookings_user ON bookings(user_id);
+CREATE INDEX idx_bookings_car ON bookings(car_id);
+CREATE INDEX idx_bookings_dates ON bookings(start_date, end_date);
 
 -- Create initial admin user (password: Tonyplayz2023$)
-INSERT INTO users (email, password_hash, name, role) 
+INSERT INTO users (email, password, name, role) 
 VALUES (
     'nigroan67@gmail.com', 
     '$2b$10$YourHashedPasswordHere',  -- We'll generate this properly

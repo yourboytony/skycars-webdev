@@ -1,117 +1,160 @@
 import { hash, compare } from 'bcrypt';
-import crypto from 'node:crypto';
-import { Buffer } from 'node:buffer';
-import { generateToken } from './auth';
 
-export const db = {
-    // User Management
-    async createUser(env, { email, password, name, role = 'user' }) {
-        const password_hash = await hash(password, 10);
-        
-        const stmt = env.DB.prepare(`
-            INSERT INTO users (email, password_hash, name, role)
-            VALUES (?, ?, ?, ?)
-        `).bind(email, password_hash, name, role);
-        
-        return stmt.run();
-    },
+const SALT_ROUNDS = 10;
 
-    async getUserByEmail(env, email) {
-        const stmt = env.DB.prepare('SELECT * FROM users WHERE email = ?').bind(email);
-        const result = await stmt.first();
-        return result;
-    },
+export class DB {
+  constructor(env) {
+    this.env = env;
+  }
 
-    async updateUser(env, id, updates) {
-        const validFields = ['name', 'email', 'role'];
-        const setFields = Object.keys(updates)
-            .filter(key => validFields.includes(key))
-            .map(key => `${key} = ?`);
-        
-        if (setFields.length === 0) return null;
+  // User Management
+  async createUser({ email, password, name, role = 'user' }) {
+    const hashedPassword = await hash(password, SALT_ROUNDS);
+    
+    const { success, error } = await this.env.DB.prepare(`
+      INSERT INTO users (email, password, name, role)
+      VALUES (?, ?, ?, ?)
+    `)
+    .bind(email, hashedPassword, name, role)
+    .run();
 
-        const query = `
-            UPDATE users 
-            SET ${setFields.join(', ')}
-            WHERE id = ?
-        `;
+    if (!success) throw new Error(error || 'Failed to create user');
+    return { email, name, role };
+  }
 
-        const values = [...Object.values(updates), id];
-        const stmt = env.DB.prepare(query).bind(...values);
-        return stmt.run();
-    },
+  async getUserByEmail(email) {
+    const user = await this.env.DB.prepare(`
+      SELECT * FROM users WHERE email = ?
+    `)
+    .bind(email)
+    .first();
+    
+    return user;
+  }
 
-    // Authentication
-    async login(env, email, password) {
-        const user = await this.getUserByEmail(env, email);
-        if (!user) return null;
+  async validatePassword(email, password) {
+    const user = await this.getUserByEmail(email);
+    if (!user) return false;
+    return compare(password, user.password);
+  }
 
-        const valid = await compare(password, user.password_hash);
-        if (!valid) return null;
+  async updateUser(email, updates) {
+    const setFields = Object.keys(updates)
+      .map(key => `${key} = ?`)
+      .join(', ');
 
-        // Create session
-        const token = generateToken();
-        const expires = new Date();
-        expires.setDate(expires.getDate() + 7); // 7 days from now
+    const { success, error } = await this.env.DB.prepare(`
+      UPDATE users 
+      SET ${setFields}
+      WHERE email = ?
+    `)
+    .bind(...Object.values(updates), email)
+    .run();
 
-        const stmt = env.DB.prepare(`
-            INSERT INTO sessions (user_id, token, expires_at)
-            VALUES (?, ?, ?)
-        `).bind(user.id, token, expires.toISOString());
+    if (!success) throw new Error(error || 'Failed to update user');
+  }
 
-        await stmt.run();
-        await this.updateLastLogin(env, user.id);
+  // Car Management
+  async createCar({ make, model, year, price, description, imageUrl }) {
+    const { success, error } = await this.env.DB.prepare(`
+      INSERT INTO cars (make, model, year, price, description, image_url)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `)
+    .bind(make, model, year, price, description, imageUrl)
+    .run();
 
-        return { token, user: { id: user.id, email: user.email, role: user.role } };
-    },
+    if (!success) throw new Error(error || 'Failed to create car listing');
+  }
 
-    async validateSession(env, token) {
-        const stmt = env.DB.prepare(`
-            SELECT users.*, sessions.expires_at
-            FROM sessions 
-            JOIN users ON users.id = sessions.user_id
-            WHERE sessions.token = ? AND sessions.expires_at > datetime('now')
-        `).bind(token);
+  async getCars({ limit = 10, offset = 0, search = '' }) {
+    let query = `
+      SELECT * FROM cars
+      WHERE make LIKE ? OR model LIKE ? OR description LIKE ?
+      LIMIT ? OFFSET ?
+    `;
 
-        return stmt.first();
-    },
+    const searchTerm = `%${search}%`;
+    
+    const cars = await this.env.DB.prepare(query)
+      .bind(searchTerm, searchTerm, searchTerm, limit, offset)
+      .all();
 
-    async logout(env, token) {
-        const stmt = env.DB.prepare('DELETE FROM sessions WHERE token = ?').bind(token);
-        return stmt.run();
-    },
+    return cars?.results || [];
+  }
 
-    // Admin Functions
-    async getAllUsers(env, { page = 1, limit = 10 } = {}) {
-        const offset = (page - 1) * limit;
-        const stmt = env.DB.prepare(`
-            SELECT id, email, name, role, created_at, last_login 
-            FROM users 
-            ORDER BY created_at DESC 
-            LIMIT ? OFFSET ?
-        `).bind(limit, offset);
+  async getCarById(id) {
+    const car = await this.env.DB.prepare(`
+      SELECT * FROM cars WHERE id = ?
+    `)
+    .bind(id)
+    .first();
 
-        const countStmt = env.DB.prepare('SELECT COUNT(*) as total FROM users');
-        
-        const [users, count] = await Promise.all([
-            stmt.all(),
-            countStmt.first()
-        ]);
+    return car;
+  }
 
-        return {
-            users: users.results,
-            total: count.total,
-            pages: Math.ceil(count.total / limit)
-        };
-    },
+  async updateCar(id, updates) {
+    const setFields = Object.keys(updates)
+      .map(key => `${key} = ?`)
+      .join(', ');
 
-    async updateLastLogin(env, userId) {
-        const stmt = env.DB.prepare(`
-            UPDATE users 
-            SET last_login = datetime('now') 
-            WHERE id = ?
-        `).bind(userId);
-        
-        return stmt.run();
-    }
-}; 
+    const { success, error } = await this.env.DB.prepare(`
+      UPDATE cars 
+      SET ${setFields}
+      WHERE id = ?
+    `)
+    .bind(...Object.values(updates), id)
+    .run();
+
+    if (!success) throw new Error(error || 'Failed to update car');
+  }
+
+  async deleteCar(id) {
+    const { success, error } = await this.env.DB.prepare(`
+      DELETE FROM cars WHERE id = ?
+    `)
+    .bind(id)
+    .run();
+
+    if (!success) throw new Error(error || 'Failed to delete car');
+  }
+
+  // Booking Management
+  async createBooking({ carId, userId, startDate, endDate, status = 'pending' }) {
+    const { success, error } = await this.env.DB.prepare(`
+      INSERT INTO bookings (car_id, user_id, start_date, end_date, status)
+      VALUES (?, ?, ?, ?, ?)
+    `)
+    .bind(carId, userId, startDate, endDate, status)
+    .run();
+
+    if (!success) throw new Error(error || 'Failed to create booking');
+  }
+
+  async getBookingsByUser(userId) {
+    const bookings = await this.env.DB.prepare(`
+      SELECT b.*, c.make, c.model, c.year
+      FROM bookings b
+      JOIN cars c ON b.car_id = c.id
+      WHERE b.user_id = ?
+    `)
+    .bind(userId)
+    .all();
+
+    return bookings?.results || [];
+  }
+
+  async updateBookingStatus(bookingId, status) {
+    const { success, error } = await this.env.DB.prepare(`
+      UPDATE bookings 
+      SET status = ?
+      WHERE id = ?
+    `)
+    .bind(status, bookingId)
+    .run();
+
+    if (!success) throw new Error(error || 'Failed to update booking status');
+  }
+}
+
+// Export a factory function to create DB instances
+export const createDB = (env) => new DB(env); 
