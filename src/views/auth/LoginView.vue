@@ -44,15 +44,15 @@
         <div>
           <button
             type="submit"
-            :disabled="loading"
+            :disabled="authStore.loading"
             class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-sky-blue hover:bg-deep-blue focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-blue disabled:opacity-50"
           >
-            {{ loading ? 'Signing in...' : 'Sign in' }}
+            {{ authStore.loading ? 'Signing in...' : 'Sign in' }}
           </button>
         </div>
 
-        <div v-if="error" class="text-red-600 text-center text-sm">
-          {{ error }}
+        <div v-if="authStore.error" class="text-red-600 text-center text-sm">
+          {{ authStore.error }}
         </div>
       </form>
     </div>
@@ -62,27 +62,21 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const authStore = useAuthStore()
+
 const email = ref('')
 const password = ref('')
-const error = ref('')
-const loading = ref(false)
 
 async function handleSubmit() {
-  if (loading.value) return
-  
-  loading.value = true
-  error.value = ''
-  
   try {
-    // TODO: Implement actual login logic
-    console.log('Login attempt:', { email: email.value, password: password.value })
+    await authStore.login(email.value, password.value)
     router.push('/')
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Login failed'
-  } finally {
-    loading.value = false
+  } catch (error) {
+    // Error is handled in the store
+    console.error('Login failed:', error)
   }
 }
 </script>
