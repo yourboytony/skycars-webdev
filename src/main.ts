@@ -1,7 +1,7 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import { createRouter, createWebHistory } from 'vue-router'
-import { VueQueryPlugin } from '@tanstack/vue-query'
+import { VueQueryPlugin, QueryClient } from '@tanstack/vue-query'
 import App from './App.vue'
 
 // Import global styles
@@ -29,13 +29,8 @@ const router = createRouter({
 // Create Pinia store
 const pinia = createPinia()
 
-// Create Vue app
-const app = createApp(App)
-
-// Register plugins
-app.use(router)
-app.use(pinia)
-app.use(VueQueryPlugin, {
+// Create Query Client
+const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
@@ -44,6 +39,14 @@ app.use(VueQueryPlugin, {
     }
   }
 })
+
+// Create Vue app
+const app = createApp(App)
+
+// Register plugins
+app.use(router)
+app.use(pinia)
+app.use(VueQueryPlugin, { queryClient })
 
 // Global error handler
 app.config.errorHandler = (err, instance, info) => {
