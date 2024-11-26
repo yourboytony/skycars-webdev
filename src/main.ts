@@ -1,62 +1,13 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import { createRouter, createWebHistory } from 'vue-router'
-import { VueQueryPlugin, QueryClient } from '@tanstack/vue-query'
 import App from './App.vue'
-
-// Import global styles
+import router from './router'
 import './assets/main.css'
-import 'tailwindcss/tailwind.css'
 
-// Import routes
-import { routes } from './router'
-
-// Create router instance
-const router = createRouter({
-  history: createWebHistory(),
-  routes,
-  scrollBehavior(to, from, savedPosition) {
-    if (savedPosition) {
-      return savedPosition
-    }
-    if (to.hash) {
-      return { el: to.hash }
-    }
-    return { top: 0 }
-  }
-})
-
-// Create Pinia store
+const app = createApp(App)
 const pinia = createPinia()
 
-// Create Query Client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
-      staleTime: 5 * 60 * 1000 // 5 minutes
-    }
-  }
-})
-
-// Create Vue app
-const app = createApp(App)
-
-// Register plugins
-app.use(router)
 app.use(pinia)
-app.use(VueQueryPlugin, { queryClient })
+app.use(router)
 
-// Global error handler
-app.config.errorHandler = (err, instance, info) => {
-  console.error('Global error:', err)
-  console.error('Component:', instance)
-  console.error('Info:', info)
-}
-
-// Mount app
 app.mount('#app')
-
-// Export for testing
-export { app, router, pinia }
