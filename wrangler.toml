@@ -1,0 +1,15 @@
+name = "skycars"
+main = "src/worker.js"
+compatibility_date = "2024-01-01"
+
+[site]
+bucket = "./dist"
+
+[build]
+command = "npm run build"
+upload.format = "service-worker"
+
+[env.production]
+name = "skycars-prod"
+route = "your-domain.com/*"
+zone_id = "your_zone_id" 
