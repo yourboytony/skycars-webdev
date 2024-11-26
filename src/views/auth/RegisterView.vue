@@ -1,0 +1,1 @@
+# (Previous RegisterView.vue content)
