@@ -1,9 +1,9 @@
 {
-  "name": "your-project-name",
+  "name": "skycars",
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "wrangler deploy --dry-run",
+    "build": "esbuild src/worker.js --bundle --outfile=dist/worker.js --format=esm",
     "dev": "wrangler dev src/worker.js",
     "deploy": "wrangler deploy"
   },
