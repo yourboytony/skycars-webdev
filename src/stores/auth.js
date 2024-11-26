@@ -5,8 +5,10 @@ const ADMIN_EMAILS = ['nigroan67@gmail.com', 'seand908@gmail.com']
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    token: localStorage.getItem('token') || null,
-    user: JSON.parse(localStorage.getItem('user')) || null
+    user: null,
+    token: null,
+    loading: false,
+    error: null
   }),
 
   getters: {

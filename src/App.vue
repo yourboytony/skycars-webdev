@@ -136,7 +136,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore } from './stores/auth'
 import { useRouter } from 'vue-router'
 import CookieConsent from '@/components/CookieConsent.vue'
 
