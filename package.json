@@ -1,32 +1,50 @@
 {
-  "name": "skycars",
+  "name": "your-project-name",
+  "version": "1.0.0",
   "private": true,
-  "version": "0.0.1",
   "scripts": {
-    "dev": "wrangler dev src/worker.js",
     "build": "wrangler deploy --dry-run",
+    "dev": "wrangler dev src/worker.js",
     "deploy": "wrangler deploy"
   },
   "dependencies": {
-    "vue": "^3.3.4",
-    "vue-router": "^4.2.4",
-    "pinia": "^2.1.6",
-    "axios": "^1.6.2",
     "bcrypt": "^5.1.1",
+    "hono": "^3.11.7",
     "jsonwebtoken": "^9.0.2",
-    "mongodb": "^6.3.0",
-    "@heroicons/vue": "^2.0.18",
-    "date-fns": "^2.30.0"
+    "@mapbox/node-pre-gyp": "^1.0.11",
+    "node-addon-api": "^5.1.0",
+    "detect-libc": "^2.0.3",
+    "https-proxy-agent": "^5.0.1",
+    "make-dir": "^3.1.0",
+    "node-fetch": "^2.7.0",
+    "nopt": "^5.0.0",
+    "npmlog": "^5.0.1",
+    "rimraf": "^3.0.2",
+    "tar": "^6.2.1",
+    "agent-base": "^6.0.2",
+    "debug": "^4.3.7",
+    "semver": "^6.3.1",
+    "whatwg-url": "^5.0.0"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^4.3.4",
-    "autoprefixer": "^10.4.16",
-    "postcss": "^8.4.31",
-    "tailwindcss": "^3.3.5",
-    "vite": "^4.4.9",
-    "@tailwindcss/forms": "^0.5.7",
-    "@tailwindcss/typography": "^0.5.10",
-    "path": "^0.12.7",
-    "wrangler": "^3.0.0"
+    "wrangler": "^3.90.0",
+    "@cloudflare/workers-types": "^4.20231121.0",
+    "@cloudflare/kv-asset-handler": "^0.3.4",
+    "@cloudflare/workers-shared": "^0.8.0",
+    "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
+    "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
+    "blake3-wasm": "^2.1.5",
+    "chokidar": "^4.0.1",
+    "date-fns": "^4.1.0",
+    "esbuild": "^0.17.19",
+    "miniflare": "^3.20241106.1",
+    "path-to-regexp": "^6.3.0",
+    "source-map": "^0.6.1",
+    "undici": "^5.28.4",
+    "ws": "^8.18.0",
+    "zod": "^3.23.8"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
